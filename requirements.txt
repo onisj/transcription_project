@@ -1,0 +1,15 @@
+flask
+numpy
+pandas
+torch
+transformers
+librosa
+yt-dlp
+ibm_watson
+ffmpeg
+ipykernel
+requests 
+beautifulsoup4
+beautifulsoup4 
+selenium 
+webdriver-manager
