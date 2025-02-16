@@ -1,10 +1,25 @@
-./data/raw/
+# Ignore all raw data (audio, extracted files, large downloads)
+data/raw/audio/
+data/raw/extracted_audio/
+data/raw/models/
+data/raw/text/
 
-/data/
+data/processed/audio/
+data/processed/text/
+data/processed/transcript/
+data/processed/video_to_text/
 
+# Keep the main data directory but ignore large files
+!data/.gitkeep
+
+# Ignore virtual environments
 venv/
-/venv/
-
-__pycache__/
+.venv/
 transcript_project/
-/transcript_project/
+transcript_project/
+
+# Ignore Python cache and environment files
+__pycache__/
+.env
+transcript_project/
+notebooks/data_to_text2.ipynb
