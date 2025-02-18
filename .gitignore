@@ -15,12 +15,16 @@ data/processed/video_to_text/
 # Ignore virtual environments
 venv/
 .venv/
-transcript_project/
-transcript_project/
+
 
 # Ignore Python cache and environment files
 __pycache__/
 .env
-transcript_project/
 notebooks/data_to_text2.ipynb
-venv/
+
+
+# other irrelevant files
+clean_tree.py
+mkdir.py
+NEXT.py
+

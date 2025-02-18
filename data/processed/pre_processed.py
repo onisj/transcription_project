@@ -144,8 +144,11 @@ class DataPreprocessor:
                         relative_path = os.path.relpath(input_path, audio_source_dir)
                         output_path = os.path.join(CONVERTED_AUDIO_DIR, "english", "kjv", "mp3bible", relative_path).replace(".mp3", ".wav")
 
-                        self.convert_audio(input_path, output_path)
+                        # 🔥 Ensure correct directory exists
+                        self.ensure_directory_exists(output_path)
 
+                        # 🔥 Convert and save
+                        self.convert_audio(input_path, output_path)
 
 
     def process_json_files(self):
