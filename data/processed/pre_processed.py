@@ -12,11 +12,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 # Import DataCrawler
 from data.raw.data_crawler import DataCrawler
 
-# 📌 MongoDB Setup
+# MongoDB Setup
 MONGO_URI = "mongodb://localhost:27017/"
 DB_NAME = "transcription_db"
 
-# 📌 Directories (Ensure they match the crawler output)
+# Directories (Ensure they match the crawler output)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # Raw Directories (Source)
@@ -60,7 +60,7 @@ class DataPreprocessor:
         directory = os.path.dirname(file_path)
         if not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
-            print(f"📂 Created directory: {directory}")
+            print(f"Created directory: {directory}")
 
     def ensure_audio_folder_structure(self):
         """Ensure all folders in /raw/extracted_audio/ exist in /processed/audio/converted_audio/."""
@@ -71,7 +71,7 @@ class DataPreprocessor:
                 processed_subdir = os.path.join(CONVERTED_AUDIO_DIR, relative_path)
 
                 os.makedirs(processed_subdir, exist_ok=True)
-                print(f"📂 Ensured folder exists: {processed_subdir}")
+                print(f"Ensured folder exists: {processed_subdir}")
 
     def run_crawler_if_needed(self):
         """Runs DataCrawler only if raw data is missing for ANY language."""
@@ -85,9 +85,9 @@ class DataPreprocessor:
         missing_data = [lang for lang, path in required_dirs.items() if not os.path.exists(path) or not os.listdir(path)]
 
         if not missing_data:
-            print("✅ All raw data found. Skipping DataCrawler.")
+            print("All raw data found. Skipping DataCrawler.")
         else:
-            print(f"⚠️ Missing raw data for: {', '.join(missing_data)}. Running DataCrawler...")
+            print(f"Missing raw data for: {', '.join(missing_data)}. Running DataCrawler...")
             crawler = DataCrawler()
             crawler.run_all_crawlers()
             self.log_process("run_crawler", "completed", {"missing_data": missing_data})
@@ -95,14 +95,14 @@ class DataPreprocessor:
     def convert_audio(self, input_path, output_path):
         """Convert audio to 16kHz mono WAV and save to output directory."""
         try:
-            # ✅ Skip conversion if the file already exists in MongoDB or filesystem
+            # Skip conversion if the file already exists in MongoDB or filesystem
             if os.path.exists(output_path):
-                print(f"⏭️ Skipping conversion (file already exists): {output_path}")
+                print(f"Skipping conversion (file already exists): {output_path}")
                 return
 
-            # ✅ Check MongoDB logs to see if file was already converted
+            # Check MongoDB logs to see if file was already converted
             if self.db.process_logs.find_one({"action": "convert_audio", "converted": output_path}):
-                print(f"⏭️ Skipping conversion (file already logged in MongoDB): {output_path}")
+                print(f"Skipping conversion (file already logged in MongoDB): {output_path}")
                 return
 
             self.ensure_directory_exists(output_path)
@@ -111,14 +111,14 @@ class DataPreprocessor:
             audio.export(output_path, format="wav")
             print(f"🎵 Converted: {output_path}")
 
-            # ✅ Log the successful conversion in MongoDB
+            # Log the successful conversion in MongoDB
             self.log_process("convert_audio", "success", {
                 "original": input_path,
                 "converted": output_path
             })
 
         except Exception as e:
-            print(f"❌ Error processing {input_path}: {e}")
+            print(f"Error processing {input_path}: {e}")
             self.log_process("convert_audio", "failed", {
                 "original": input_path,
                 "error": str(e)
@@ -127,11 +127,11 @@ class DataPreprocessor:
 
     def process_audio_files(self):
         """Convert raw audio files to 16kHz WAV and save to the correct processed directory."""
-        print("📌 Converting audio files...")
+        print("Converting audio files...")
 
-        # 🔥 Ensure we are processing only KJV MP3 Bible files
+        # Ensure we are processing only KJV MP3 Bible files
         audio_source_dirs = [
-            os.path.join(RAW_AUDIO_DIR, "english", "kjv", "mp3bible"),  # ✅ Correct KJV directory
+            os.path.join(RAW_AUDIO_DIR, "english", "kjv", "mp3bible"),  # Correct KJV directory
         ]
 
         for audio_source_dir in audio_source_dirs:
@@ -140,20 +140,20 @@ class DataPreprocessor:
                     if file.endswith(".mp3") or file.endswith(".wav"):
                         input_path = os.path.join(root, file)
 
-                        # 🔥 Maintain correct relative path from `mp3bible/`
+                        # Maintain correct relative path from `mp3bible/`
                         relative_path = os.path.relpath(input_path, audio_source_dir)
                         output_path = os.path.join(CONVERTED_AUDIO_DIR, "english", "kjv", "mp3bible", relative_path).replace(".mp3", ".wav")
 
-                        # 🔥 Ensure correct directory exists
+                        # Ensure correct directory exists
                         self.ensure_directory_exists(output_path)
 
-                        # 🔥 Convert and save
+                        # Convert and save
                         self.convert_audio(input_path, output_path)
 
 
     def process_json_files(self):
         """Move JSON files to processed directory if they can be validated."""
-        print("📌 Processing JSON files...")
+        print("Processing JSON files...")
 
         json_source_dirs = [
             os.path.join(RAW_TEXT_DIR, "english", "kjv", "mp3bible", "json"),
@@ -171,10 +171,10 @@ class DataPreprocessor:
                             with open(input_path, "r", encoding="utf-8") as f:
                                 json.load(f)
 
-                            print(f"✅ Valid JSON: {input_path}")
+                            print(f"Valid JSON: {input_path}")
                             self.ensure_directory_exists(output_path)
                             shutil.move(input_path, output_path)
-                            print(f"📂 Moved: {input_path} → {output_path}")
+                            print(f"Moved: {input_path} → {output_path}")
 
                             # Log process
                             self.log_process("process_json", "success", {
@@ -183,7 +183,7 @@ class DataPreprocessor:
                             })
 
                         except json.JSONDecodeError as e:
-                            print(f"❌ Invalid JSON: {input_path} - {e}")
+                            print(f"Invalid JSON: {input_path} - {e}")
                             self.log_process("process_json", "failed", {
                                 "original": input_path,
                                 "error": str(e)
@@ -196,7 +196,7 @@ class DataPreprocessor:
         self.process_audio_files()
         self.process_json_files()
         self.log_process("run_pipeline", "completed", {"message": "Data processing pipeline finished"})
-        print("✅ Data processing pipeline completed!")
+        print("Data processing pipeline completed!")
 
 if __name__ == "__main__":
     processor = DataPreprocessor()

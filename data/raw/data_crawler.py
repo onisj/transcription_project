@@ -105,47 +105,47 @@ class DataCrawler:
         # Create collections if they don't exist
         for collection in required_collections:
             if collection not in existing_collections:
-                print(f"📂 Creating collection: {collection}")
+                print(f"Creating collection: {collection}")
                 self.db.create_collection(collection)
 
-        print("✅ Database and collections are ready.")
+        print("Database and collections are ready.")
 
     def extract_zip(self, file_path, extract_path, language):
         """ Extract ZIP files if valid and store metadata in MongoDB, but skip if already extracted. """
-        print(f"📦 Attempting to extract {file_path} to {extract_path}...")
+        print(f"Attempting to extract {file_path} to {extract_path}...")
 
         # Check if extraction directory already contains files
         if os.path.exists(extract_path) and os.listdir(extract_path):
-            print(f"⏭️ Skipping extraction: {extract_path} already contains extracted files.")
+            print(f"Skipping extraction: {extract_path} already contains extracted files.")
             return  # Skip extraction
 
         if not os.path.exists(file_path):
-            print(f"❌ ZIP file not found: {file_path}")
+            print(f"ZIP file not found: {file_path}")
             return
 
         if not zipfile.is_zipfile(file_path):
-            print(f"❌ Not a valid ZIP file: {file_path}")
+            print(f"Not a valid ZIP file: {file_path}")
             return
 
         try:
             os.makedirs(extract_path, exist_ok=True)
             with zipfile.ZipFile(file_path, "r") as zip_ref:
                 zip_ref.extractall(extract_path)
-                print(f"✅ Extracted: {file_path} to {extract_path}")
+                print(f"Extracted: {file_path} to {extract_path}")
 
             # Update status in MongoDB
             self.db.raw_audio.update_one(
                 {"file_path": file_path},
                 {"$set": {"status": "extracted", "extracted_path": extract_path}}
             )
-            print(f"📂 Stored extraction metadata in MongoDB for: {file_path}")
+            print(f"Stored extraction metadata in MongoDB for: {file_path}")
 
         except Exception as e:
-            print(f"❌ Extraction failed for {file_path}: {e}")
+            print(f"Extraction failed for {file_path}: {e}")
 
     def fetch_telegram_audio(self):
         """ Download ZIP files from Telegram channels and store metadata in MongoDB. """
-        print("📌 Fetching large audio files from Telegram...")
+        print("Fetching large audio files from Telegram...")
 
         # Start the Telegram client session
         self.telegram_client.connect()
@@ -157,7 +157,7 @@ class DataCrawler:
                 self.telegram_client.sign_in(PHONE, code)
 
             except AuthRestartError:
-                print("⚠️ Telegram requires re-authentication. Restarting process...")
+                print("Telegram requires re-authentication. Restarting process...")
                 self.telegram_client.send_code_request(PHONE)
                 code = input("Enter the new code you received: ")
                 self.telegram_client.sign_in(PHONE, code)
@@ -166,13 +166,13 @@ class DataCrawler:
                 password = input("Enter your Telegram password: ")
                 self.telegram_client.sign_in(password=password)
 
-        print("✅ Logged into Telegram.")
+        print("Logged into Telegram.")
 
         for lang, (channel, message_ids) in TELEGRAM_CHANNELS.items():
             extract_path = os.path.join(EXTRACT_DIR, lang)
             os.makedirs(extract_path, exist_ok=True)
 
-            print(f"📥 Fetching ZIP files from {channel} for {lang}...")
+            print(f"Fetching ZIP files from {channel} for {lang}...")
 
             for message_id in message_ids:
                 message = self.telegram_client.get_messages(channel, ids=message_id)
@@ -181,9 +181,9 @@ class DataCrawler:
                     save_path = os.path.join(AUDIO_DIR, lang, message.file.name)
 
                     if os.path.exists(save_path):
-                        print(f"⏭️ Skipping {message.file.name}, already downloaded.")
+                        print(f"Skipping {message.file.name}, already downloaded.")
                     else:
-                        print(f"⬇️ Downloading {message.file.name} ({message.file.size / 1024 / 1024:.2f} MB)...")
+                        print(f"Downloading {message.file.name} ({message.file.size / 1024 / 1024:.2f} MB)...")
                         message.download_media(file=save_path)
 
                         # Store metadata in MongoDB
@@ -194,21 +194,21 @@ class DataCrawler:
                             "file_path": save_path,
                             "status": "downloaded"
                         })
-                        print(f"📂 Stored metadata in MongoDB: {save_path}")
+                        print(f"Stored metadata in MongoDB: {save_path}")
 
                     # **LOGGING ADDED**
-                    print(f"📦 Extracting {save_path} to {extract_path}...")
+                    print(f"Extracting {save_path} to {extract_path}...")
                     
                     # Call extraction
                     self.extract_zip(save_path, extract_path, lang)
 
         self.telegram_client.disconnect()
-        print("✅ Telegram audio download completed.")
+        print("Telegram audio download completed.")
 
 
     def fetch_mp3_bible_audio(self):
         """Fetch and extract MP3 Bible audio files from MP3_BIBLE_URL."""
-        print("📌 Fetching MP3 Bible audio files...")
+        print("Fetching MP3 Bible audio files...")
 
         # Fetch all ZIP file links
         response = requests.get(MP3_BIBLE_URL)
@@ -219,7 +219,7 @@ class DataCrawler:
             if tag["href"].endswith(".zip") and "-KJV_Bible" in tag["href"] and "LARGE" not in tag["href"]
         ]
 
-        print(f"📌 Found {len(zip_links)} ZIP files to download.")
+        print(f"Found {len(zip_links)} ZIP files to download.")
 
         for link in zip_links:
             file_name = os.path.basename(link)
@@ -227,9 +227,9 @@ class DataCrawler:
 
             # Download the ZIP file if it doesn't already exist
             if os.path.exists(save_path):
-                print(f"⏭️ Skipping download (already exists): {save_path}")
+                print(f"Skipping download (already exists): {save_path}")
             else:
-                print(f"⬇️ Downloading {file_name}...")
+                print(f"Downloading {file_name}...")
                 with requests.get(link, stream=True) as r:
                     r.raise_for_status()
                     with open(save_path, "wb") as f:
@@ -237,7 +237,7 @@ class DataCrawler:
                             f.write(chunk)
 
             # Extract the ZIP file
-            print(f"📦 Extracting {file_name}...")
+            print(f"Extracting {file_name}...")
             self.extract_zip(save_path, MP3_BIBLE_EXTRACT_DIR, "english")
 
             # Store metadata in MongoDB
@@ -249,9 +249,9 @@ class DataCrawler:
                 "status": "extracted",
                 "extracted_path": MP3_BIBLE_EXTRACT_DIR
             })
-            print(f"📂 Stored metadata in MongoDB: {save_path}")
+            print(f"Stored metadata in MongoDB: {save_path}")
 
-        print("✅ MP3 Bible audio download and extraction completed.")
+        print("MP3 Bible audio download and extraction completed.")
 
 
     def get_html_links(self, url):
@@ -266,13 +266,13 @@ class DataCrawler:
             if file_url.endswith(".HTM") or file_url.endswith(".htm"):
                 links.append(file_url)
 
-        print(f"🔗 Found {len(links)} HTM files to download: {links}")
+        print(f"Found {len(links)} HTM files to download: {links}")
         return links
 
     def download_file(self, url, save_path):
         """Downloads and saves a file from a URL if it does not already exist."""
         if os.path.exists(save_path):
-            print(f"⏭️ Skipping download, file already exists: {save_path}")
+            print(f"Skipping download, file already exists: {save_path}")
             return False  # Indicate that no download occurred
 
         response = requests.get(url)
@@ -280,16 +280,16 @@ class DataCrawler:
         with open(save_path, "wb") as file:
             file.write(response.content)
 
-        print(f"✅ Downloaded: {save_path}")
+        print(f"Downloaded: {save_path}")
         return True  # Indicate that a new file was downloaded
 
     def fetch_bible_text(self):
         """Fetches HTM Bible files and converts them to JSON, skipping existing files."""
-        print("📌 Fetching Bible text files...")
+        print("Fetching Bible text files...")
 
         html_links = self.get_html_links(TEXT_BIBLE_URL)
         if not html_links:
-            print("❌ No HTM files found. Check the source URL.")
+            print("No HTM files found. Check the source URL.")
             return
 
         for link in html_links:
@@ -300,18 +300,18 @@ class DataCrawler:
 
             # Skip download if the file already exists
             if not self.download_file(link, htm_path):
-                print(f"⏭️ Skipping conversion, file already exists: {json_path}")
+                print(f"Skipping conversion, file already exists: {json_path}")
                 continue  # Skip conversion since the file was not newly downloaded
 
             # Convert to JSON
             self.convert_htm_to_json(htm_path, json_path)
 
-        print("✅ All HTM files successfully processed.")
+        print("All HTM files successfully processed.")
 
     def convert_htm_to_json(self, htm_file, json_file):
         """Converts a single .HTM Bible file into JSON format if it does not already exist."""
         if os.path.exists(json_file):
-            print(f"⏭️ Skipping conversion, JSON already exists: {json_file}")
+            print(f"Skipping conversion, JSON already exists: {json_file}")
             return  # Skip conversion
 
         with open(htm_file, "r", encoding="utf-8") as file:
@@ -330,7 +330,7 @@ class DataCrawler:
                 verse_text = cols[1].text.strip()
                 verses.append({"verse": verse_id, "text": verse_text})
 
-        print(f"📖 Extracted {len(verses)} verses from {htm_file}")
+        print(f"Extracted {len(verses)} verses from {htm_file}")
 
         # Create JSON structure
         bible_data = {"book": book_title, "verses": verses}
@@ -339,7 +339,7 @@ class DataCrawler:
         with open(json_file, "w", encoding="utf-8") as json_out:
             json.dump(bible_data, json_out, indent=4, ensure_ascii=False)
 
-        print(f"✅ Converted {htm_file} -> {json_file}")
+        print(f"Converted {htm_file} -> {json_file}")
 
     def zip_htm_files(self):
         """Zips the HTM files folder and stores metadata in MongoDB."""
@@ -351,7 +351,7 @@ class DataCrawler:
                     file_path = os.path.join(root, file)
                     zipf.write(file_path, os.path.relpath(file_path, HTM_FOLDER))
 
-        print(f"📦 Zipped HTM files: {zip_path}")
+        print(f"Zipped HTM files: {zip_path}")
 
         # Store metadata in MongoDB
         self.db.raw_text.insert_one({
@@ -360,7 +360,7 @@ class DataCrawler:
             "file_path": zip_path,
             "status": "backup_saved"
         })
-        print("📂 Stored metadata in MongoDB.")
+        print("Stored metadata in MongoDB.")
 
 
     def rename_file(self, file_url):
@@ -379,7 +379,7 @@ class DataCrawler:
     
     def fetch_yoruba_audio(self):
         """Scrape and download Yoruba audio from NaijaSermon, storing metadata in MongoDB."""
-        print("📌 Fetching Yoruba audio from NaijaSermon...")
+        print("Fetching Yoruba audio from NaijaSermon...")
         download_folder = os.path.join(EXTRACT_DIR, "yoruba", "kjv", "naijasermon")
         os.makedirs(download_folder, exist_ok=True)
 
@@ -399,17 +399,17 @@ class DataCrawler:
             if re.search(r'\.mp3$', tag["href"], re.IGNORECASE)
         ]
 
-        print(f"📌 Found {len(mp3_links)} Yoruba MP3 files.")
+        print(f"Found {len(mp3_links)} Yoruba MP3 files.")
 
         for link in mp3_links:
             new_filename = self.rename_file(link)
             local_filename = os.path.join(download_folder, new_filename)
 
             if os.path.exists(local_filename):
-                print(f"⏭️ Skipping {new_filename}, file already exists.")
+                print(f"Skipping {new_filename}, file already exists.")
                 continue
 
-            print(f"⬇️ Downloading {new_filename}...")
+            print(f"Downloading {new_filename}...")
             with requests.get(link, headers=headers, stream=True) as r:
                 r.raise_for_status()
                 with open(local_filename, 'wb') as f:
@@ -423,7 +423,7 @@ class DataCrawler:
                 "file_path": local_filename,
                 "status": "downloaded"
             })
-            print(f"📂 Stored metadata in MongoDB: {new_filename}")
+            print(f"Stored metadata in MongoDB: {new_filename}")
     
 
     def run_all_crawlers(self):
@@ -433,7 +433,7 @@ class DataCrawler:
         self.fetch_mp3_bible_audio()
         self.fetch_bible_text()
         self.zip_htm_files()
-        print("✅ All data crawlers executed successfully!")
+        print("All data crawlers executed successfully!")
 
 if __name__ == "__main__":
     crawler = DataCrawler()
