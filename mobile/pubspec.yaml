@@ -1,0 +1,64 @@
+# pubspec.yaml for Flutter Real-Time Transcription App
+
+name: nigerian_transcription_app
+description: Real-time transcription app for Nigerian languages
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI and Material Design
+  cupertino_icons: ^1.0.2
+  
+  # WebSocket communication
+  web_socket_channel: ^2.4.0
+  
+  # Audio recording
+  record: ^5.0.4
+  
+  # Permissions
+  permission_handler: ^11.0.1
+  
+  # File operations
+  path_provider: ^2.1.1
+  
+  # HTTP requests (for REST API)
+  http: ^1.1.0
+  
+  # JSON handling
+  json_annotation: ^4.8.1
+  
+  # State management (optional)
+  provider: ^6.1.1
+  
+  # Local storage
+  shared_preferences: ^2.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  flutter_lints: ^3.0.0
+  json_serializable: ^6.7.1
+  build_runner: ^2.4.7
+
+flutter:
+  uses-material-design: true
+  
+  # Add app icon and splash screen
+  assets:
+    - assets/images/
+    - assets/icons/
+  
+  # Define app fonts (optional)
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: fonts/Roboto-Regular.ttf
